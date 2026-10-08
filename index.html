@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Soil Care | แอปวิเคราะห์ดินกรด</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f3f7f2;color:#203226}
+header{background:linear-gradient(135deg,#246b45,#5b9b61);color:white;padding:28px 20px;text-align:center}
+header h1{margin:0 0 6px;font-size:30px} header p{margin:0;opacity:.9}
+.container{max-width:900px;margin:24px auto;padding:0 16px}
+.card{background:white;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 22px #183b2212}
+h2{margin-top:0;color:#245b3b}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+label{font-weight:700;font-size:14px;display:block;margin-bottom:7px}
+input,select{width:100%;padding:12px;border:1px solid #cbd8ce;border-radius:10px;font-size:16px;background:#fff}
+button{width:100%;padding:14px;border:0;border-radius:11px;background:#28754a;color:white;font-size:17px;font-weight:700;cursor:pointer;margin-top:18px}
+button:hover{background:#1f5e3b}.result{display:none}.badge{display:inline-block;padding:7px 12px;border-radius:20px;font-weight:700;margin:5px 0 12px}
+.good{background:#d9f2df;color:#176332}.warn{background:#fff0c7;color:#805b00}.bad{background:#ffe0df;color:#9b2924}
+.big{font-size:34px;font-weight:800;color:#28754a}.tip{background:#f1f7f2;border-left:5px solid #5b9b61;padding:12px 15px;border-radius:8px;margin:10px 0}
+.history-item{padding:12px;border-bottom:1px solid #e5ece6}.history-item:last-child{border:0}
+small{color:#64756a}.footer{text-align:center;color:#66776c;padding:15px;font-size:13px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}header h1{font-size:25px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌱 AI Soil Care</h1>
+  <p>ระบบวิเคราะห์และแนะนำการแก้ปัญหาดินกรด</p>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>🔬 ตรวจวิเคราะห์ดิน</h2>
+    <div class="grid">
+      <div>
+        <label>ค่า pH ของดิน</label>
+        <input id="ph" type="number" min="0" max="14" step="0.1" placeholder="เช่น 4.8">
+      </div>
+      <div>
+        <label>ชนิดดิน</label>
+        <select id="soil">
+          <option>ดินร่วน</option><option>ดินเหนียว</option><option>ดินทราย</option>
+          <option>ดินร่วนปนทราย</option>
+        </select>
+      </div>
+      <div>
+        <label>พืชที่ปลูก</label>
+        <select id="plant">
+          <option>ข้าว</option><option>ข้าวโพด</option><option>ผัก</option>
+          <option>มันสำปะหลัง</option><option>ไม้ผล</option>
+        </select>
+      </div>
+      <div>
+        <label>ความชื้นในดิน</label>
+        <select id="moisture">
+          <option>ต่ำ</option><option>ปานกลาง</option><option>สูง</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="analyze()">🤖 ให้ AI วิเคราะห์ดิน</button>
+  </div>
+
+  <div class="card result" id="result">
+    <h2>📊 ผลการวิเคราะห์</h2>
+    <div id="status"></div>
+    <div>ค่า pH ที่ตรวจพบ: <span class="big" id="phOut"></span></div>
+    <p id="summary"></p>
+    <h3>💡 คำแนะนำจากระบบ</h3>
+    <div id="tips"></div>
+    <p><small>หมายเหตุ: คำแนะนำนี้เป็นต้นแบบเพื่อการศึกษา การกำหนดปริมาณวัสดุปูนจริงควรอาศัยผลวิเคราะห์ดินและคำแนะนำจากผู้เชี่ยวชาญ</small></p>
+  </div>
+
+  <div class="card">
+    <h2>📝 ประวัติการตรวจ</h2>
+    <div id="history"><small>ยังไม่มีข้อมูลการตรวจ</small></div>
+  </div>
+
+  <div class="footer">AI Soil Care — โครงงานเทคโนโลยีเพื่อการเกษตรอัจฉริยะ</div>
+</div>
+
+<script>
+function analyze(){
+  const ph=parseFloat(document.getElementById('ph').value);
+  const soil=document.getElementById('soil').value;
+  const plant=document.getElementById('plant').value;
+  const moisture=document.getElementById('moisture').value;
+  if(isNaN(ph)||ph<0||ph>14){alert('กรุณากรอกค่า pH ระหว่าง 0–14');return;}
+
+  let cls,title,summary,tips=[];
+  if(ph<5.0){
+    cls='bad'; title='🔴 ดินเป็นกรดมาก';
+    summary=`ค่า pH ${ph} ต่ำ ควรให้ความสำคัญกับการปรับปรุงดินก่อนหรือระหว่างการเพาะปลูก`;
+    tips.push('ควรตรวจวิเคราะห์ดินเพิ่มเติมก่อนกำหนดปริมาณปูนขาวหรือปูนโดโลไมท์');
+    tips.push('เพิ่มอินทรียวัตถุ เช่น ปุ๋ยหมักหรือปุ๋ยคอกที่เหมาะสม เพื่อช่วยปรับปรุงโครงสร้างดิน');
+    tips.push('ติดตามค่า pH หลังปรับปรุงอย่างสม่ำเสมอ');
+  } else if(ph<6.0){
+    cls='warn'; title='🟡 ดินเป็นกรด';
+    summary=`ค่า pH ${ph} แสดงว่าดินมีความเป็นกรด ควรติดตามและปรับปรุงตามความเหมาะสม`;
+    tips.push('พิจารณาการใช้ปูนปรับสภาพดินตามผลวิเคราะห์ดิน');
+    tips.push('เพิ่มอินทรียวัตถุเพื่อช่วยรักษาคุณภาพดิน');
+    tips.push('ตรวจค่า pH ซ้ำหลังการปรับปรุง');
+  } else if(ph<=7.0){
+    cls='good'; title='🟢 ค่า pH อยู่ในช่วงเหมาะสม';
+    summary=`ค่า pH ${ph} อยู่ในช่วงที่เหมาะสมสำหรับพืชหลายชนิด`;
+    tips.push('รักษาระดับอินทรียวัตถุและความชื้นให้เหมาะสม');
+    tips.push('ตรวจค่า pH เป็นระยะเพื่อป้องกันการเปลี่ยนแปลงของดิน');
+  } else {
+    cls='warn'; title='🟡 ดินไม่เป็นกรด';
+    summary=`ค่า pH ${ph} ไม่ได้แสดงปัญหาดินกรด แต่ควรพิจารณาความต้องการ pH เฉพาะของพืช`;
+    tips.push('หลีกเลี่ยงการเติมวัสดุที่เพิ่มความเป็นด่างโดยไม่จำเป็น');
+    tips.push('ตรวจธาตุอาหารร่วมด้วยเพื่อประเมินความสมบูรณ์ของดิน');
+  }
+
+  if(moisture==='สูง') tips.push('ความชื้นสูง: ควรจัดการการระบายน้ำให้เหมาะสม');
+  if(soil==='ดินเหนียว') tips.push('ดินเหนียว: ควรเพิ่มอินทรียวัตถุและดูแลการระบายน้ำ');
+  if(soil==='ดินทราย') tips.push('ดินทราย: ควรเพิ่มอินทรียวัตถุเพื่อช่วยอุ้มน้ำและธาตุอาหาร');
+
+  document.getElementById('status').innerHTML=`<span class="badge ${cls}">${title}</span>`;
+  document.getElementById('phOut').textContent=ph;
+  document.getElementById('summary').textContent=summary;
+  document.getElementById('tips').innerHTML=tips.map(x=>`<div class="tip">✓ ${x}</div>`).join('');
+  document.getElementById('result').style.display='block';
+
+  const history=JSON.parse(localStorage.getItem('soilHistory')||'[]');
+  history.unshift({ph,soil,plant,date:new Date().toLocaleString('th-TH')});
+  localStorage.setItem('soilHistory',JSON.stringify(history.slice(0,10)));
+  renderHistory();
+}
+function renderHistory(){
+  const h=JSON.parse(localStorage.getItem('soilHistory')||'[]');
+  document.getElementById('history').innerHTML=h.length?h.map(x=>`<div class="history-item"><b>pH ${x.ph}</b> — ${x.plant}<br><small>${x.soil} • ${x.date}</small></div>`).join(''):'<small>ยังไม่มีข้อมูลการตรวจ</small>';
+}
+renderHistory();
+</script>
+</body>
+</html>
